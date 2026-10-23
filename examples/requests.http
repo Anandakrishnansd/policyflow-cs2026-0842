@@ -1,0 +1,95 @@
+### PolicyFlow REST API Examples & Manual Test Harness
+
+### 1. Intake - Create New Policy Request (HTTP 201 Expected)
+POST http://localhost:8000/api/policy-requests
+Content-Type: application/json
+Accept: application/json
+
+{
+  "client_request_id": "AGT-2026-0001",
+  "agent_id": "AGENT-17",
+  "customer_name": "Sample Customer",
+  "date_of_birth": "1998-04-10",
+  "destination": "INTERNATIONAL",
+  "trip_start": "2026-11-10",
+  "trip_end": "2026-11-14",
+  "plan_code": "PLUS",
+  "sum_insured": 300000
+}
+
+### 2. Intake - Repeated Submission (Idempotent Duplicate Intake - HTTP 200 Expected)
+POST http://localhost:8000/api/policy-requests
+Content-Type: application/json
+Accept: application/json
+
+{
+  "client_request_id": "AGT-2026-0001",
+  "agent_id": "AGENT-17",
+  "customer_name": "Sample Customer",
+  "date_of_birth": "1998-04-10",
+  "destination": "INTERNATIONAL",
+  "trip_start": "2026-11-10",
+  "trip_end": "2026-11-14",
+  "plan_code": "PLUS",
+  "sum_insured": 300000
+}
+
+### 3. Intake - Validation Failure (Inverted dates - HTTP 422 Expected)
+POST http://localhost:8000/api/policy-requests
+Content-Type: application/json
+Accept: application/json
+
+{
+  "client_request_id": "AGT-2026-INVALID",
+  "agent_id": "AGENT-17",
+  "customer_name": "Invalid Customer",
+  "date_of_birth": "1998-04-10",
+  "destination": "INTERNATIONAL",
+  "trip_start": "2026-11-20",
+  "trip_end": "2026-11-10",
+  "plan_code": "PLUS",
+  "sum_insured": 300000
+}
+
+### 4. List All Policy Requests (Paginated)
+GET http://localhost:8000/api/policy-requests
+Accept: application/json
+
+### 5. Fetch Policy Details & Audit Trail by UUID
+# Replace with actual UUID from step 1
+GET http://localhost:8000/api/policy-requests/YOUR_POLICY_UUID_HERE
+Accept: application/json
+
+### 6. Submit Issuance - SUCCESS scenario
+POST http://localhost:8000/api/policy-requests/YOUR_POLICY_UUID_HERE/submit
+Content-Type: application/json
+Accept: application/json
+
+{
+  "scenario": "SUCCESS"
+}
+
+### 7. Submit Issuance - TIMEOUT_AFTER_ISSUE scenario (Simulate HTTP 504 / NEEDS_RECONCILIATION)
+POST http://localhost:8000/api/policy-requests/YOUR_POLICY_UUID_HERE/submit
+Content-Type: application/json
+Accept: application/json
+
+{
+  "scenario": "TIMEOUT_AFTER_ISSUE"
+}
+
+### 8. Reconcile Policy against Provider
+POST http://localhost:8000/api/policy-requests/YOUR_POLICY_UUID_HERE/reconcile
+Accept: application/json
+
+### 9. Mock Insurer Webhook Callback (Dispatches confirmation event)
+POST http://localhost:8000/api/mock-insurer/callback
+Content-Type: application/json
+Accept: application/json
+
+{
+  "event_id": "EVT-MANUAL-001",
+  "provider_reference": "PRV-XXXXXX",
+  "event_type": "POLICY_ISSUED",
+  "policy_number": "POL-2026-123456"
+}
